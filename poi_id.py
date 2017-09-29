@@ -10,6 +10,12 @@ from feature_format import featureFormat, targetFeatureSplit
 from sklearn.cross_validation import train_test_split
 from sklearn import linear_model
 from sklearn.grid_search import GridSearchCV
+from sklearn.feature_selection import SelectKBest
+from sklearn.tree import DecisionTreeClassifier
+from sklearn.naive_bayes import GaussianNB
+from sklearn.ensemble import RandomForestClassifier
+from sklearn.metrics import *
+from sklearn.preprocessing import MinMaxScaler
 from tester import dump_classifier_and_data
 
 ### Task 1: Select what features you'll use.
@@ -23,13 +29,24 @@ features_list = ['poi',
                  'to_messages',
                  'from_messages',
                  'from_poi_to_this_person',
-                 'from_this_person_to_poi']
+                 'from_this_person_to_poi',
+                 'deferral_payments',
+                 'restricted_stock_deferred',
+                 'deferred_income',
+                 'total_stock_value',
+                 'expenses',
+                 'exercised_stock_options',
+                 'long_term_incentive',
+                 'restricted_stock']
 
 print "\n Features List", features_list
 
 ### Load the dictionary containing the dataset
 with open("final_project_dataset.pkl", "r") as data_file:
     data_dict = pickle.load(data_file)
+    
+#### Total No. of Data Points
+print "\n No. of Data Points in the dataset is", len(data_dict)
 
 #### Checking the Poi
 num_poi = 0
@@ -37,7 +54,20 @@ for i in data_dict.values():
     if i['poi']==True:
         num_poi += 1
 print "\n Total Person of Interest in the dataset is :", num_poi
+print "\n Total N0. of non POIs in the dataset are:", len(data_dict)-num_poi
 
+#### Missing Features
+print "\n Missing Features of each cateory are:"
+
+nan = [0 for i in range(len(features_list))]
+for i in data_dict.values():
+    for j,feature in enumerate(features_list):
+        if i[feature] == 'NaN':
+            nan[j] += 1
+
+for i, feature in enumerate(features_list):
+    print feature, nan[i]
+    
 #### Salary Drawn by POI
 print "\n Names of peron of interest and Salary Drawn by them at ENRON are:"
 for i,j in data_dict.items():
@@ -188,7 +218,33 @@ features_list.extend(['from_poi_to_this_person_ratio','from_this_person_to_poi_r
 data = featureFormat(my_dataset, features_list, sort_keys = True)
 labels, features = targetFeatureSplit(data)
 
-features_train, features_test, labels_train, labels_test = train_test_split(features, labels, test_size = 0.3, random_state=42)
+#### Scaling
+scaler = MinMaxScaler()
+features = scaler.fit_transform(features)
+
+#### feature selection
+selection = SelectKBest(k=6)
+selection.fit(features, labels)
+x = selection.transform(features)
+
+results = zip(selection.get_support(), features_list[1:], selection.scores_)
+results = sorted(results, key=lambda x: x[2], reverse=True)
+print "K-best features:", results
+
+## update features list chosen manually and by SelectKBest
+features_list = ['poi',
+                 'exercised_stock_options',
+                 'total_stock_value',
+                 'bonus',
+                 'salary',
+                 'from_this_person_to_poi_ratio',
+                 'deferred_income']
+
+data = featureFormat(my_dataset, features_list, sort_keys = True)
+labels, features = targetFeatureSplit(data)
+
+features_train, features_test, labels_train, labels_test = \
+train_test_split(features, labels, test_size = 0.3, random_state=42)
 
 ### Task 4: Try a varity of classifiers
 ### Please name your classifier clf for easy export below.
@@ -198,30 +254,15 @@ features_train, features_test, labels_train, labels_test = train_test_split(feat
 
 # Provided to give you a starting point. Try a variety of classifiers.
 
-from sklearn.naive_bayes import GaussianNB
-from sklearn.metrics import *
-
 #clf = GaussianNB()
-#clf.fit(features_train, labels_train)
-#pred = clf.predict(features_test)
-#acc = accuracy_score(pred, labels_test)
-
-from sklearn.tree import DecisionTreeClassifier
 
 clf = DecisionTreeClassifier()
-#clf.fit(features_train, labels_train)
-#pred = clf.predict(features_test)
-#acc = accuracy_score(pred, labels_test)
-
-from sklearn.ensemble import RandomForestClassifier
 
 #clf = RandomForestClassifier()
+
 clf.fit(features_train, labels_train)
 pred = clf.predict(features_test)
 acc = accuracy_score(pred, labels_test)
-
-print "precision = ", precision_score(labels_test,pred)
-print "recall = ", recall_score(labels_test,pred)
 print "\n Accuracy is:", acc
 
 ### Task 5: Tune your classifier to achieve better than .3 precision and recall 
@@ -231,21 +272,24 @@ print "\n Accuracy is:", acc
 ### stratified shuffle split cross validation. For more info: 
 ### http://scikit-learn.org/stable/modules/generated/sklearn.cross_validation.StratifiedShuffleSplit.html
 
+print "\n After Tuning",
 ### For Decision Tree
-clf1 = DecisionTreeClassifier(min_samples_split=10, min_samples_leaf=2)
-clf1 = clf1.fit(features_train,labels_train)
-pred1 = clf1.predict(features_test)
+#clf1 = DecisionTreeClassifier(min_samples_split=10, min_samples_leaf=2)
+#clf1 = clf1.fit(features_train,labels_train)
+#pred1 = clf1.predict(features_test)
 
 ### For Random Forest
-#clf2 = {"n_estimators":[2, 3, 5],  "criterion": ('gini', 'entropy')}
-#clf = GridSearchCV(clf, clf2)
+clf2 = {"n_estimators":[2, 3, 5],  "criterion": ('gini', 'entropy')}
+clf = GridSearchCV(clf, clf2)
 
 # Example starting point. Try investigating other evaluation techniques!
-
+ 
+print "precision = ", precision_score(labels_test,pred)
+print "recall = ", recall_score(labels_test,pred)
 print "Confusion matrix"
-print confusion_matrix(labels_test, pred1)
-print "Classification report for %s" % clf1
-print classification_report(labels_test, pred1)
+print confusion_matrix(labels_test, pred)
+print "Classification report for is" 
+print classification_report(labels_test, pred)
 
 
 ### Task 6: Dump your classifier, dataset, and features_list so anyone can
