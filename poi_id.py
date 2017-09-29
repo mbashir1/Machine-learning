@@ -101,13 +101,18 @@ plt.ylabel('Loan Advances')
 plt.title('Loan vs Salary Comaprison')
 plt.show()
 
-print "\n There are outliers in this case too. Surprisingly, maximum loan advances made by those are with maximim salary. So, let's curtail it."
+print "\n There are outliers in this case too and the contributers are:"
 
 for i, v in data_dict.items():
     if v['loan_advances'] != 'NaN' and v['loan_advances'] > 10000000:
         print i
+
+print "\n Let's remove the outliers"
+
 data_dict.pop('TOTAL',0)
 data_dict.pop('LAY KENNETH L',0)
+
+print"\n Cleaned Plot is"
 
 data1= featureFormat(data_dict, feature1)
 for point in data1:
@@ -132,14 +137,19 @@ plt.ylabel('Loan Advances')
 plt.title('Loan vs Payment Comaprison')
 plt.show()
 
-print "\n There are outliers in this case too. Surprisingly, maximum loan advances made by those are with maximim salary. So, let's curtail it."
+print "\n The Outliers in this case are: "
 
 for i, v in data_dict.items():
     if v['total_payments'] != 'NaN' and v['total_payments'] > 10000000:
         print i
+
+print "\n Removing the Outliers"
+
 data_dict.pop('LAVORATO JOHN J',0)
 data_dict.pop('BHATNAGAR SANJAY',0)
 data_dict.pop('FREVERT MARK A',0)
+
+print "\n Cleaned Plot is:"
 
 data2= featureFormat(data_dict, feature2)
 for point in data2:
@@ -199,16 +209,16 @@ from sklearn.metrics import *
 from sklearn.tree import DecisionTreeClassifier
 
 clf = DecisionTreeClassifier()
-clf.fit(features_train, labels_train)
-pred = clf.predict(features_test)
-acc = accuracy_score(pred, labels_test)
+#clf.fit(features_train, labels_train)
+#pred = clf.predict(features_test)
+#acc = accuracy_score(pred, labels_test)
 
 from sklearn.ensemble import RandomForestClassifier
 
 #clf = RandomForestClassifier()
-#clf.fit(features_train, labels_train)
-#pred = clf.predict(features_test)
-#acc = accuracy_score(pred, labels_test)
+clf.fit(features_train, labels_train)
+pred = clf.predict(features_test)
+acc = accuracy_score(pred, labels_test)
 
 print "precision = ", precision_score(labels_test,pred)
 print "recall = ", recall_score(labels_test,pred)
@@ -222,9 +232,9 @@ print "\n Accuracy is:", acc
 ### http://scikit-learn.org/stable/modules/generated/sklearn.cross_validation.StratifiedShuffleSplit.html
 
 ### For Decision Tree
-#clf1 = DecisionTreeClassifier(min_samples_split=10, min_samples_leaf=2)
-#clf1 = clf1.fit(features_train,labels_train)
-#pred1 = clf1.predict(features_test)
+clf1 = DecisionTreeClassifier(min_samples_split=10, min_samples_leaf=2)
+clf1 = clf1.fit(features_train,labels_train)
+pred1 = clf1.predict(features_test)
 
 ### For Random Forest
 #clf2 = {"n_estimators":[2, 3, 5],  "criterion": ('gini', 'entropy')}
@@ -233,9 +243,9 @@ print "\n Accuracy is:", acc
 # Example starting point. Try investigating other evaluation techniques!
 
 print "Confusion matrix"
-print confusion_matrix(labels_test, pred)
-print "Classification report for %s" % clf
-print classification_report(labels_test, pred)
+print confusion_matrix(labels_test, pred1)
+print "Classification report for %s" % clf1
+print classification_report(labels_test, pred1)
 
 
 ### Task 6: Dump your classifier, dataset, and features_list so anyone can
