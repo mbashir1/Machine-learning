@@ -15,9 +15,21 @@ The aim of this project is to identify the fraud based on the data available by 
 The dataset has records of 146 different persons with  21 different features. However, this is not a perfect dataset. There are many entries in the dataset whose records are missing and have been written as NaN. Despite that, we calculated the number of POIs (persons of interest) and total number comes out to be 18. I also looked at their salary side by side.
 
 ## Feature Selection
-The features I decided to choose for my investigation includes **poi, salary, bonus, total_payments, loan_advances, to_messages, from_messages, from_poi_to_this_person, from_this_person_to_poi**
+The features I decided to choose for my investigation includes **poi, salary, bonus, total_payments, loan_advances, to_messages, from_messages, from_poi_to_this_person, from_this_person_to_poi**. The purpose of this project is to analyze the fraudulance of the employee at ENRON. Since the crime involved money, so those features which can give insight into the movement of money have been selwcted. 
 
 ## Checking for outliers
 - A salary versus bonus plot is created and we see that an outlier exists. On investigation, it was found to be 'TOTAL' value actually which has crept in the dataset due to human error. Removing this and replotting shows us that majority of the employees have a salary around 5 million US dollar but few have more who turn out to be the owners and CEO of Enron.
 - In the second scatter plot, we check the relationship between the saalry and loan_advance which is the loan one takes from a bank. Surprisingly, there are people who have salary in excess of 100 million and yet have high loans to repay. For the dataset these are outliers but it also exposes that unethial practices were going on in conjuction with the banks. On searching, it turned out to be the CEO of the company, **LAY KENNETH L**.
 - Third plot is in sync with second one, where we see the relationship between loan and total amount. **LAVORATO JOHN J**, **BHATNAGAR SANJAY**, **FREVERT MARK A** are the three pople who are identified as outliers here. These outliers are removed and cleaned dataset is created as well as the plots showing the beahvior.
+
+## Adding new features to the existing list
+Important people in the company also known as POIs were the one mostly responsible for the collapse of the organization. The email data showed us that. Since a number of mails were sent and received, we wanted to find out who were the most frequent mail writers ad to whom. We look at it from the propects of POIs and so we add two new features: **from_this_person_to_poi_ratio** and **from_poi_to_this_person_ratio**. The list is then appended to include these new features.
+
+## Checking the accuracy using different Algorithms
+I used three algorithms here: **GaussianNB**, **DecisionTreeClassifier**, and **RandomForestClassifier**. For all the three cases accuracy was checked and for decision tree, it was found to be 0.825, 0.275 for GaussianNB, and 0.825 for Random Forest.
+
+## Tuning the algorithm for the required precision and recall
+ On tuning, it was seen that GaussianNB is not the best algorithm for this case. For me the algorithm that turned to be the best was DecisionTree. By changing the two parameters **min_samples_split=10, min_samples_leaf=2**, the desired precision and recall was obtained.
+ 
+ ## Conclusion
+The precision can be interpreted as the likelihood that a person who is identified as a POI is actually a true POI; the fact that this is 0.86 on average means that using this identifier to flag POI’s would result in 14% of the positive flags being false alarms. Recall measures how likely it is that identifier will flag a POI in the test set. 88% of the time it would catch that person, and 12% of the time it wouldn’t.
