@@ -274,7 +274,7 @@ print "\n Accuracy is:", acc
 
 print "\n After Tuning",
 ### For Decision Tree
-#clf1 = DecisionTreeClassifier(min_samples_split=10, min_samples_leaf=2)
+#clf1 = DecisionTreeClassifier(min_samples_split=5, min_samples_leaf=2)
 #clf1 = clf1.fit(features_train,labels_train)
 #pred1 = clf1.predict(features_test)
 
