@@ -15,7 +15,13 @@ The aim of this project is to identify the fraud based on the data available by 
 The dataset has records of 146 different persons with  21 different features. However, this is not a perfect dataset. There are many entries in the dataset whose records are missing and have been written as NaN. Despite that, we calculated the number of POIs (persons of interest) and total number comes out to be 18. I also looked at their salary side by side.
 
 ## Feature Selection
-The features I decided to choose for my investigation includes **poi, salary, bonus, total_payments, loan_advances, to_messages, from_messages, from_poi_to_this_person, from_this_person_to_poi, 'deferral_payments', 'restricted_stock_deferred', 'deferred_income', 'total_stock_value', 'expenses', 'exercised_stock_options', 'long_term_incentive', 'restricted_stock'**. Later on the best feature feature was selected. For GaussianNB and DecisionTreeClassfier, 6 features were found to be most important and they are **'poi', 'exercised_stock_options', 'total_stock_value', 'bonus', 'salary', 'from_this_person_to_poi_ratio', 'deferred_income'**. Similarly for RandomForestClasifier four features are found to be most important. Also, one of the feature that we created is part of the important feature to be included for analysis.
+The features I decided to choose for my investigation includes **poi, salary, bonus, total_payments, loan_advances, to_messages, from_messages, from_poi_to_this_person, from_this_person_to_poi, 'deferral_payments', 'restricted_stock_deferred', 'deferred_income', 'total_stock_value', 'expenses', 'exercised_stock_options', 'long_term_incentive', 'restricted_stock'**. Later on the best feature feature was selected. For GaussianNB and DecisionTreeClassfier, 6 features were found to be most important and they are **'poi', 'shared_receipt_with_poi', 'loan_advances', 'from_poi_to_this_person', 'to_messages', 'from_this_person_to_poi_ratio'**. Their scores are:
+- ('shared_receipt_with_poi', 7.5903169251762979),
+ - ('from_poi_to_this_person', 4.7396631249076204),
+ - ('loan_advances', 2.5578794453272402),
+ - ('from_this_person_to_poi', 2.1752399005622309),
+ - ('to_messages', 1.6347475070474591)
+ Similarly for RandomForestClasifier four features are found to be most important. Also, one of the feature that we created is part of the important feature to be included for analysis. The graphs are enclosed separetely.
 
 ## Checking for outliers
 - A salary versus bonus plot is created and we see that an outlier exists. On investigation, it was found to be 'TOTAL' value actually which has crept in the dataset due to human error. Removing this and replotting shows us that majority of the employees have a salary around 5 million US dollar but few have more who turn out to be the owners and CEO of Enron.
