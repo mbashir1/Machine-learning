@@ -375,8 +375,8 @@ labels, features = targetFeatureSplit(data)
 scaler = MinMaxScaler()
 features = scaler.fit_transform(features)
 
-# select best features
-features_list = getBestFeatures(features, labels, 10, True)
+# select 8 best features
+features_list = getBestFeatures(features, labels, 8, True)
 
 # Re-split data based on new feature list after getBestFeatures
 data = featureFormat(my_dataset, features_list, sort_keys=True)
