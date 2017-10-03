@@ -36,14 +36,15 @@ For GaussianNB, the importance plot is shown below:
 For RandomForest, the importance plot is shown below:
 ![random forest](https://user-images.githubusercontent.com/32125590/31129071-29b9757c-a871-11e7-8521-ab7e55de8875.png)
 
-Later on the best feature feature was selected. For GaussianNB and DecisionTreeClassfier, 6 features were found to be most important and they are **'bonus', 'from_this_person_to_poi_ratio', 'salary', 'total_stock_value', 'deferred_income', 'exercised_stock_options',
-'from_this_person_to_poi_ratio'**. Their scores are:
-- **'bonus', 25.120253476785731,
+As we can see from the graphs, the peak is at 8 features. So, the top 8 best feature feature was selectedgFor GaussianNB,  DecisionTreeClassfier, and RandomForestClassifier 6 and they are **'bonus', 'from_this_person_to_poi_ratio', 'salary', 'total_stock_value', 'deferred_income', 'exercised_stock_options', total_payments', 'long_term_incentive',' from_this_person_to_poi_ratio'**. Their scores are:
+- 'bonus', 25.120253476785731,
 - 'from_this_person_to_poi_ratio', 20.248480365813322,
 - 'salary', 19.897922810571995,
 - 'total_stock_value', 16.966094475320194,
 - 'deferred_income', 16.448752839991339,
-- 'exercised_stock_options', 15.554364943242589**
+- 'exercised_stock_options', 15.554364943242589
+- total_payments', 10.920229659539357,
+- 'long_term_incentive', 6.5694894829186392
  
 Also, to be noted here is that one of the feature that we created is part of the important feature to be included for analysis. The graphs are enclosed separetely. Scaling is needed as the dataset obtained after splitting the original dataset is of different dimensions. Thus transforming features by scaling brings feature to a same range.
 
