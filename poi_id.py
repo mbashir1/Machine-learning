@@ -2,25 +2,23 @@
 
 import sys
 import pickle
-import random
-import numpy as np
-sys.path.append("../tools/")
-
+import pprint
+sys.path.append("../tools/")  # noqa
 from feature_format import featureFormat, targetFeatureSplit
-from sklearn.cross_validation import train_test_split
-from sklearn import linear_model
-from sklearn.grid_search import GridSearchCV
-from sklearn.feature_selection import SelectKBest
-from sklearn.tree import DecisionTreeClassifier
-from sklearn.naive_bayes import GaussianNB
-from sklearn.ensemble import RandomForestClassifier
-from sklearn.metrics import *
-from sklearn.preprocessing import MinMaxScaler
 from tester import dump_classifier_and_data
+from sklearn.grid_search import GridSearchCV
+from sklearn.cross_validation import StratifiedShuffleSplit
+from sklearn.cross_validation import train_test_split
+from sklearn.metrics import *
+from sklearn.feature_selection import SelectKBest, f_classif
+from sklearn.preprocessing import MinMaxScaler
+from sklearn.tree import DecisionTreeClassifier
+from sklearn.neighbors import KNeighborsClassifier
+from sklearn.naive_bayes import GaussianNB
+import numpy as np
+import matplotlib.pyplot as plt
 
-### Task 1: Select what features you'll use.
-### features_list is a list of strings, each of which is a feature name.
-### The first feature must be "poi".
+# Options for feature selction
 features_list = ['poi',
                  'salary',
                  'bonus',
@@ -39,22 +37,22 @@ features_list = ['poi',
                  'long_term_incentive',
                  'restricted_stock']
 
-print "\n Features List", features_list
+print "Features List", features_list
 
 ### Load the dictionary containing the dataset
 with open("final_project_dataset.pkl", "r") as data_file:
     data_dict = pickle.load(data_file)
     
 #### Total No. of Data Points
-print "\n No. of Data Points in the dataset is", len(data_dict)
+print "No. of Data Points in the dataset is", len(data_dict)
 
 #### Checking the Poi
 num_poi = 0
 for i in data_dict.values():
     if i['poi']==True:
         num_poi += 1
-print "\n Total Person of Interest in the dataset is :", num_poi
-print "\n Total N0. of non POIs in the dataset are:", len(data_dict)-num_poi
+print "Total Person of Interest in the dataset is :", num_poi
+print "Total N0. of non POIs in the dataset are:", len(data_dict)-num_poi
 
 #### Missing Features
 print "\n Missing Features of each cateory are:"
@@ -69,7 +67,7 @@ for i, feature in enumerate(features_list):
     print feature, nan[i]
     
 #### Salary Drawn by POI
-print "\n Names of peron of interest and Salary Drawn by them at ENRON are:"
+print "Names of peron of interest and Salary Drawn by them at ENRON are:"
 for i,j in data_dict.items():
     if j['poi']:
         print i,':',j['salary']
@@ -81,9 +79,9 @@ for i in data_dict.values():
     if i['salary'] != 'NaN':
         sal.add(i['salary'])
 
-print "\n Maximum Salary drawn by an employee at ENRON is :", max(sal)
-print "\n Minimum Salary drawn by an employee at ENRON is :", min(sal)
-print "\n Mean Salary of the employee at ENRON is :", statistics.mean(sal)
+print "Maximum Salary drawn by an employee at ENRON is :", max(sal)
+print "Minimum Salary drawn by an employee at ENRON is :", min(sal)
+print "Mean Salary of the employee at ENRON is :", statistics.mean(sal)
 
 ### Task 2: Remove outliers
 
@@ -100,7 +98,7 @@ plt.ylabel('Bonus')
 plt.title('Bonus vs Salary Comaprison')
 plt.show()
 
-print "\n There is an outlier in the plot. So, we shall remove it first."
+print "There is an outlier in the plot. So, we shall remove it first."
 
 for i, v in data_dict.items():
     if v['salary'] != 'NaN' and v['salary'] > 10000000:
@@ -142,8 +140,6 @@ print "\n Let's remove the outliers"
 data_dict.pop('TOTAL',0)
 data_dict.pop('LAY KENNETH L',0)
 
-print"\n Cleaned Plot is"
-
 data1= featureFormat(data_dict, feature1)
 for point in data1:
     salary = point[0]
@@ -179,8 +175,6 @@ data_dict.pop('LAVORATO JOHN J',0)
 data_dict.pop('BHATNAGAR SANJAY',0)
 data_dict.pop('FREVERT MARK A',0)
 
-print "\n Cleaned Plot is:"
-
 data2= featureFormat(data_dict, feature2)
 for point in data2:
     total_payments = point[0]
@@ -214,46 +208,183 @@ for i, j in my_dataset.iteritems():
 
 features_list.extend(['from_poi_to_this_person_ratio','from_this_person_to_poi_ratio'])
 
-### Extract features and labels from dataset for local testing
-data = featureFormat(my_dataset, features_list, sort_keys = True)
+def getTrainingTestSets(labels, features):
+    """ Creates training and test sets based on the StratifiedShuffleSplit
+    args:
+        labels: list of labels from the data
+        features: list of features in the data
+    """
+    cv = StratifiedShuffleSplit(labels, 1000, random_state=42)
+    for train_idx, test_idx in cv:
+        features_train = []
+        features_test = []
+        labels_train = []
+        labels_test = []
+        for ii in train_idx:
+            features_train.append(features[ii])
+            labels_train.append(labels[ii])
+        for jj in test_idx:
+            features_test.append(features[jj])
+            labels_test.append(labels[jj])
+    return features_train, features_test, labels_train, labels_test
+
+
+def scoreNumFeatures(test_feature_list, test_data_set):
+    """ function for determining the best number of features to use
+    """
+    scaler = MinMaxScaler()
+    recall_scores = []
+    precision_scores = []
+    feature_count = []
+    f1_scores = []
+    PERF_FORMAT_STRING = "\
+    Features: {:>0.{display_precision}f}\t\
+    Accuracy: {:>0.{display_precision}f}\t\
+    Precision: {:>0.{display_precision}f}\t\
+    Recall: {:>0.{display_precision}f}\t\
+    F1: {:>0.{display_precision}f}\t\
+    "
+    clf = DecisionTreeClassifier()
+    for x in range(1, len(test_feature_list)):
+        test_data = featureFormat(test_data_set, test_feature_list,
+                                  sort_keys=True)
+        test_labels, test_features = targetFeatureSplit(test_data)
+        test_features = scaler.fit_transform(test_features)
+        best_features = getBestFeatures(test_features, test_labels, x, False)
+        # Resplit data using best feature list
+        test_data = featureFormat(test_data_set, best_features,
+                                  sort_keys=True)
+        test_labels, test_features = targetFeatureSplit(test_data)
+        test_features = scaler.fit_transform(test_features)
+        total_predictions, accuracy, precision, recall, true_positives, \
+            false_positives, true_negatives, false_negatives, f1, f2 = \
+            test_classifier(clf, test_features, test_labels)
+        print PERF_FORMAT_STRING.format(x, accuracy, precision, recall, f1,
+                                        display_precision=5)
+        recall_scores.append(recall)
+        precision_scores.append(precision)
+        f1_scores.append(f1)
+        feature_count.append(x)
+
+    plt.plot(feature_count, recall_scores, marker='o', label="Recall")
+    plt.plot(feature_count, precision_scores, marker='o', label="Precision")
+    plt.plot(feature_count, f1_scores, marker='o', label="F1")
+    plt.legend()
+    plt.show()
+
+
+def test_classifier(clf, features, labels):
+    cv = StratifiedShuffleSplit(labels, 1000, random_state=42)
+    true_negatives = 0
+    false_negatives = 0
+    true_positives = 0
+    false_positives = 0
+    for train_idx, test_idx in cv:
+        features_train = []
+        features_test = []
+        labels_train = []
+        labels_test = []
+        for ii in train_idx:
+            features_train.append(features[ii])
+            labels_train.append(labels[ii])
+        for jj in test_idx:
+            features_test.append(features[jj])
+            labels_test.append(labels[jj])
+
+        # fit the classifier using training set, and test on test set
+        clf.fit(features_train, labels_train)
+        predictions = clf.predict(features_test)
+        for prediction, truth in zip(predictions, labels_test):
+            if prediction == 0 and truth == 0:
+                true_negatives += 1
+            elif prediction == 0 and truth == 1:
+                false_negatives += 1
+            elif prediction == 1 and truth == 0:
+                false_positives += 1
+            elif prediction == 1 and truth == 1:
+                true_positives += 1
+            else:
+                print "Warning: Found a predicted label not == 0 or 1."
+                print "All predictions should take value 0 or 1."
+                print "Evaluating performance for processed predictions:"
+                break
+    try:
+        total_predictions = np.sum([true_negatives, false_negatives,
+                                    false_positives, true_positives])
+        accuracy = 1.0*(true_positives + true_negatives)/total_predictions
+        precision = 1.0*true_positives/(true_positives+false_positives)
+        recall = 1.0*true_positives/(true_positives+false_negatives)
+        f1 = 2.0 * true_positives/(2*true_positives +
+                                   false_positives+false_negatives)
+        f2 = (1+2.0*2.0) * precision*recall/(4*precision + recall)
+        return total_predictions, accuracy, precision, recall,\
+            true_positives, false_positives, true_negatives, \
+            false_negatives, f1, f2
+    except:
+        print "Got a divide by zero when trying out:", clf
+        print "Precision or recall may be undefined due to a lack of \
+        true positive predicitons."
+
+
+def getBestFeatures(features, labels, num_features=15, showResults=False):
+    """ Returns the best features based on the Feature Selection Options
+    The features are selected based on the highest score / importance
+    args:
+        labels: list of labels from the data
+        features: list of features in the data
+        showResults: boolean set to true to print list of features and scores
+    """
+    features_train, features_test, labels_train, labels_test = \
+        getTrainingTestSets(labels, features)
+    revised_feature_list = ['poi']
+    k_best = SelectKBest(k=num_features)
+    k_best.fit(features_train, labels_train)
+    importance = k_best.scores_
+    
+    feature_scores = sorted(zip(features_list[1:], importance),
+                            key=lambda l: l[1], reverse=True)
+    for feature, importance in feature_scores[:num_features]:
+        revised_feature_list.append(feature)
+    if showResults:
+        print "Top features and scores:"
+        print "==================================="
+        pprint.pprint(feature_scores[:num_features])
+    return revised_feature_list
+   
+# convert dictionary into features and labels 
+data = featureFormat(my_dataset, features_list, sort_keys=True)
 labels, features = targetFeatureSplit(data)
 
-#### Scaling
+# scale features
 scaler = MinMaxScaler()
 features = scaler.fit_transform(features)
 
-#### feature selection
-selection = SelectKBest(k=6)
-selection.fit(features, labels)
-x = selection.transform(features)
+# Checking the scores for the original list of fearures
+features_list = getBestFeatures(features, labels, 10, True)
 
-results = zip(selection.get_support(), features_list[1:], selection.scores_)
-results = sorted(results, key=lambda x: x[2], reverse=True)
-print "K-best features:", results
+# Seeing the scores for the modified features_list
+scoreNumFeatures(features_list, my_dataset)
 
-## update features list chosen manually and by SelectKBest
-features_list = ['poi',
-                 'exercised_stock_options',
-                 'total_stock_value',
-                 'bonus',
-                 'salary',
-                 'from_this_person_to_poi_ratio',
-                 'deferred_income']
-
-data = featureFormat(my_dataset, features_list, sort_keys = True)
+# convert dictionary into features and labels
+data = featureFormat(my_dataset, features_list, sort_keys=True)
 labels, features = targetFeatureSplit(data)
 
+# scale features
+scaler = MinMaxScaler()
+features = scaler.fit_transform(features)
+
+# select best features
+features_list = getBestFeatures(features, labels, 10, True)
+
+# Re-split data based on new feature list after getBestFeatures
+data = featureFormat(my_dataset, features_list, sort_keys=True)
+labels, features = targetFeatureSplit(data)
+
+###
 features_train, features_test, labels_train, labels_test = \
 train_test_split(features, labels, test_size = 0.3, random_state=42)
 
-### Task 4: Try a varity of classifiers
-### Please name your classifier clf for easy export below.
-### Note that if you want to do PCA or other multi-stage operations,
-### you'll need to use Pipelines. For more info:
-### http://scikit-learn.org/stable/modules/pipeline.html
-
-# Provided to give you a starting point. Try a variety of classifiers.
-
+####
 #clf = GaussianNB()
 
 clf = DecisionTreeClassifier()
@@ -264,6 +395,12 @@ clf.fit(features_train, labels_train)
 pred = clf.predict(features_test)
 acc = accuracy_score(pred, labels_test)
 print "\n Accuracy is:", acc
+print "precision = ", precision_score(labels_test,pred)
+print "recall = ", recall_score(labels_test,pred)
+print "Confusion matrix"
+print confusion_matrix(labels_test, pred)
+print "Classification report for is" 
+print classification_report(labels_test, pred)
 
 ### Task 5: Tune your classifier to achieve better than .3 precision and recall 
 ### using our testing script. Check the tester.py script in the final project
@@ -273,28 +410,34 @@ print "\n Accuracy is:", acc
 ### http://scikit-learn.org/stable/modules/generated/sklearn.cross_validation.StratifiedShuffleSplit.html
 
 print "\n After Tuning",
+
 ### For Decision Tree
-#clf1 = DecisionTreeClassifier(min_samples_split=5, min_samples_leaf=2)
-#clf1 = clf1.fit(features_train,labels_train)
-#pred1 = clf1.predict(features_test)
+clf1 = DecisionTreeClassifier(max_features=6, min_samples_split=4,
+                                  criterion='entropy', max_depth=10,
+                                  min_samples_leaf=2)
+clf1 = clf1.fit(features_train,labels_train)
+pred1 = clf1.predict(features_test)
 
+"""
 ### For Random Forest
-clf2 = {"n_estimators":[2, 3, 5],  "criterion": ('gini', 'entropy')}
-clf = GridSearchCV(clf, clf2)
-
+tuned_param = {"n_estimators":[2, 3, 5],  "criterion": ('gini', 'entropy')}
+clf1 = GridSearchCV(clf, tuned_param)
+clf1 = clf1.fit(features_train,labels_train)
+pred1 = clf1.predict(features_test)
+"""
 # Example starting point. Try investigating other evaluation techniques!
- 
-print "precision = ", precision_score(labels_test,pred)
-print "recall = ", recall_score(labels_test,pred)
+acc1 = accuracy_score(pred1, labels_test)
+print "\n Accuracy is:", acc1 
+print "precision = ", precision_score(labels_test,pred1)
+print "recall = ", recall_score(labels_test,pred1)
 print "Confusion matrix"
-print confusion_matrix(labels_test, pred)
+print confusion_matrix(labels_test, pred1)
 print "Classification report for is" 
-print classification_report(labels_test, pred)
+print classification_report(labels_test, pred1)
 
-
-### Task 6: Dump your classifier, dataset, and features_list so anyone can
-### check your results. You do not need to change anything below, but make sure
-### that the version of poi_id.py that you submit can be run on its own and
-### generates the necessary .pkl files for validating your results.
+# Task 6: Dump your classifier, dataset, and features_list so anyone can
+# check your results. You do not need to change anything below, but make sure
+# that the version of poi_id.py that you submit can be run on its own and
+# generates the necessary .pkl files for validating your results.
 
 dump_classifier_and_data(clf, my_dataset, features_list)
