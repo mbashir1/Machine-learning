@@ -105,6 +105,8 @@ for i, v in data_dict.items():
         print i
 
 data_dict.pop('TOTAL', 0)
+data_dict.pop('LOCKHART EUGENE E', 0)
+data_dict.pop('TRAVEL AGENCY IN THE PARK', 0)
 
 data = featureFormat(data_dict, feature)
 
