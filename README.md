@@ -15,14 +15,27 @@ The aim of this project is to identify the fraud based on the data available by 
 The dataset has records of 146 different persons with  21 different features. However, this is not a perfect dataset. There are many entries in the dataset whose records are missing and have been written as NaN. Despite that, we calculated the number of POIs (persons of interest) and total number comes out to be 18. I also looked at their salary side by side.
 
 ## Feature Selection
-The features I decided to choose for my investigation includes **poi, salary, bonus, total_payments, loan_advances, to_messages, from_messages, from_poi_to_this_person, from_this_person_to_poi, 'deferral_payments', 'restricted_stock_deferred', 'deferred_income', 'total_stock_value', 'expenses', 'exercised_stock_options', 'long_term_incentive', 'restricted_stock'**. Later on the best feature feature was selected. For GaussianNB and DecisionTreeClassfier, 6 features were found to be most important and they are **'poi', 'shared_receipt_with_poi', 'loan_advances', 'from_poi_to_this_person', 'to_messages', 'from_this_person_to_poi_ratio'**. Their scores are:
-- ('shared_receipt_with_poi', 7.5903169251762979),
- - ('from_poi_to_this_person', 4.7396631249076204),
- - ('loan_advances', 2.5578794453272402),
- - ('from_this_person_to_poi', 2.1752399005622309),
- - ('to_messages', 1.6347475070474591)
+The features I decided to choose for my investigation includes **poi, salary, bonus, total_payments, loan_advances, to_messages, from_messages, from_poi_to_this_person, from_this_person_to_poi, 'deferral_payments', 'restricted_stock_deferred', 'deferred_income', 'total_stock_value', 'expenses', 'exercised_stock_options', 'long_term_incentive', 'restricted_stock'**. The scores of the original list are:
+- **'bonus', 25.120253476785731,
+- 'from_this_person_to_poi_ratio', 20.248480365813322,
+- 'salary', 19.897922810571995,
+- 'total_stock_value', 16.966094475320194,
+- 'deferred_income', 16.448752839991339,
+- 'exercised_stock_options', 15.554364943242589,
+- 'total_payments', 10.920229659539357,
+- 'long_term_incentive', 6.5694894829186392,
+- 'restricted_stock', 6.1198257007653325,
+- 'from_poi_to_this_person', 5.8579226219566731**
+Later on the best feature feature was selected. For GaussianNB and DecisionTreeClassfier, 6 features were found to be most important and they are **'bonus', 'from_this_person_to_poi_ratio', 'salary', 'total_stock_value', 'deferred_income', 'exercised_stock_options',
+'from_this_person_to_poi_ratio'**. Their scores are:
+- **'bonus', 25.120253476785731,
+- 'from_this_person_to_poi_ratio', 20.248480365813322,
+- 'salary', 19.897922810571995,
+- 'total_stock_value', 16.966094475320194,
+- 'deferred_income', 16.448752839991339,
+- 'exercised_stock_options', 15.554364943242589**
  
- Similarly for RandomForestClasifier four features are found to be most important. Also, one of the feature that we created is part of the important feature to be included for analysis. The graphs are enclosed separetely. 'kb.py' file contains the code for selecting the best features. Scaling is needed as the dataset obtained after splitting the original dataset is of different dimensions. Thus transforming features by scaling brings feature to a same range.
+Also, to be noted here is that one of the feature that we created is part of the important feature to be included for analysis. The graphs are enclosed separetely. Scaling is needed as the dataset obtained after splitting the original dataset is of different dimensions. Thus transforming features by scaling brings feature to a same range.
 
 ## Checking for outliers
 - A salary versus bonus plot is created and we see that an outlier exists. On investigation, it was found to be 'TOTAL' value actually which has crept in the dataset due to human error. Removing this and replotting shows us that majority of the employees have a salary around 5 million US dollar but few have more who turn out to be the owners and CEO of Enron.
@@ -33,12 +46,12 @@ The features I decided to choose for my investigation includes **poi, salary, bo
 Important people in the company also known as POIs were the one mostly responsible for the collapse of the organization. The email data showed us that. Since a number of mails were sent and received, we wanted to find out who were the most frequent mail writers ad to whom. We look at it from the propects of POIs and so we add two new features: **from_this_person_to_poi_ratio** and **from_poi_to_this_person_ratio**. The list is then appended to include these new features.
 
 ## Checking the accuracy using different Algorithms
-I used three algorithms here: **GaussianNB**, **DecisionTreeClassifier**, and **RandomForestClassifier**. For all the three cases accuracy was checked and for decision tree, it was found to be 0.902, 0.878 for GaussianNB, and 0.878 for Random Forest.
+I used three algorithms here: **GaussianNB**, **DecisionTreeClassifier**, and **RandomForestClassifier**. For all the three cases accuracy was checked and for decision tree, it was found to be 0.902, 0.878 for GaussianNB, and 0.85 for Random Forest.
 
 ## Tuning the algorithm for the required precision and recall
-Tuning is the process of adjusting the performance of the algorithm. By deafult, algorithms run but they can be modified according to the situation at hand to optimize the performance. On tuning, it was seen that GaussianNB is not the best algorithm for this case as there are no such parameters to tune. For me the algorithm that turned to be the best was DecisionTree. By changing the two parameters **min_samples_split=4, min_samples_leaf=2**, the desired precision and recall was obtained and it came to be **0.5** for precision as well as recall. For GaussianNB, precision obtained is **.5** and recall **0.6**. For RandomForestClassifier, the values are **0.5 and 0.4** respectively. 
+Tuning is the process of adjusting the performance of the algorithm. By deafult, algorithms run but they can be modified according to the situation at hand to optimize the performance. On tuning, it was seen that GaussianNB is not the best algorithm for this case as there are no such parameters to tune. For me the algorithm that turned to be the best was DecisionTree. By changing the parameters **max_features=6, min_samples_split=4, criterion='entropy', max_depth=10, min_samples_leaf=2**, the desired precision and recall was obtained and it came to be **0.33** for precision and **0.34** for recall. For GaussianNB, precision obtained is **.47** and recall **0.47**. For RandomForestClassifier, the values are **0.46 and 0.13** respectively and the parameters tuned are **tuned_param = {"n_estimators":[2, 3, 5],  "criterion": ('gini', 'entropy')}**. Hence GaussianNB is found to be the best algorithm. 
  
  ## Validation
 Cross-validation is a technique for evaluating ML models by training several ML models on subsets of the available input data and evaluating them on the complementary subset of the data. Use cross-validation to detect overfitting, ie, failing to generalize a pattern. The purpose is to use trained data make reliable predictions which are then validated by the test data. A classical problem that arises in such case is of overfitting. It might happen that our data has been trained very well but it fails to predict on the test dataset. One of the main reasons for using cross-validation instead of using the conventional validation (e.g. partitioning the data set into two sets of 70% for training and 30% for test) is that there is not enough data available to partition it into separate training and test sets without losing significant modelling or testing capability. In these cases, a fair way to properly estimate model prediction performance is to use cross-validation as a powerful general technique
  ## Conclusion
-The precision can be interpreted as the likelihood that a person who is identified as a POI is actually a true POI; the fact that this is 0.6 on average means that using this identifier to flag POI’s would result in 60% of the positive flags being false alarms. Recall measures how likely it is that identifier will flag a POI in the test set. 60% of the time it would catch that person, and 40% of the time it wouldn’t.
+The precision can be interpreted as the likelihood that a person who is identified as a POI is actually a true POI; the fact that this is 0.47 on average means that using this identifier to flag POI’s would result in 47% of the positive flags being false alarms. Recall measures how likely it is that identifier will flag a POI in the test set. 47% of the time it would catch that person, and 6% of the time it wouldn’t.
