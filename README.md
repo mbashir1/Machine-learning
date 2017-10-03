@@ -27,10 +27,13 @@ The features I decided to choose for my investigation includes **poi, salary, bo
 - 'restricted_stock', 6.1198257007653325,
 - 'from_poi_to_this_person', 5.8579226219566731**
 
+For Decision Tree, the importance plot is shown below:
 ![decisiontree](https://user-images.githubusercontent.com/32125590/31129069-29b1f540-a871-11e7-8e64-f4a20598ec06.png)
 
+For GaussianNB, the importance plot is shown below:
 ![gaussian](https://user-images.githubusercontent.com/32125590/31129070-29b3b542-a871-11e7-8412-598baec10ada.png)
 
+For RandomForest, the importance plot is shown below:
 ![random forest](https://user-images.githubusercontent.com/32125590/31129071-29b9757c-a871-11e7-8521-ab7e55de8875.png)
 
 Later on the best feature feature was selected. For GaussianNB and DecisionTreeClassfier, 6 features were found to be most important and they are **'bonus', 'from_this_person_to_poi_ratio', 'salary', 'total_stock_value', 'deferred_income', 'exercised_stock_options',
